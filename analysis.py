@@ -150,3 +150,7 @@ def get_daily_recommendations(force_refresh: bool = False) -> tuple[pd.DataFrame
         pass
 
     return cached_df, generated_at
+
+
+def get_pre_market_recommendations() -> tuple[pd.DataFrame, Optional[str]]:
+    return get_daily_recommendations(force_refresh=True)

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from analysis import get_daily_recommendations, load_cached_recommendations
 
@@ -15,13 +15,14 @@ def get_recommendations(force_refresh: bool = False):
 st.set_page_config(page_title="Penny Stock Radar", layout="wide")
 
 st.title("🪙 Indian Penny Stock Radar")
-now_text = datetime.now().strftime('%Y-%m-%d %H:%M')
-st.write(f"**Current time:** {now_text}")
+india_tz = timezone(timedelta(hours=5, minutes=30))
+now_text = datetime.now(india_tz).strftime('%Y-%m-%d %H:%M IST')
+st.write(f"**Current time (IST):** {now_text}")
 
 st.warning("This is for research and educational purposes only. Indian penny-stock ideas can be highly volatile and may lose value quickly. Consult a licensed financial advisor before investing.")
 
 st.sidebar.header("Market Control")
-st.sidebar.caption("Refresh the analysis before the market opens to see the latest Indian penny-stock watchlist.")
+st.sidebar.caption("This screen is designed to refresh daily before the Indian market opens, around 09:00 IST, and show the latest watchlist.")
 refresh = st.sidebar.button("Refresh research")
 
 if refresh:
@@ -49,7 +50,7 @@ if not df.empty:
         "signal": "Signal",
         "reason": "Why it stands out",
     })
-    st.dataframe(display_df.head(12), use_container_width=True)
+    st.dataframe(display_df.head(10), use_container_width=True)
 
     st.subheader("Top Picks")
     best_pick = df.iloc[0]
