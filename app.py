@@ -41,6 +41,7 @@ if generated_at:
 if not df.empty:
     st.subheader("Best Indian Penny Stock Candidates")
     display_df = df[["ticker", "price", "change_1d", "change_5d", "score", "signal", "reason"]].copy()
+    display_df = display_df.sort_values(["score", "change_1d", "change_5d"], ascending=False).head(10)
     display_df = display_df.rename(columns={
         "ticker": "Ticker",
         "price": "Price",

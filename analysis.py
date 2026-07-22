@@ -1,18 +1,23 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
 import pandas as pd
 import yfinance as yf
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
 DEFAULT_TICKERS: List[str] = [
-    "SUNDARMFIN.NS", "RPOWER.NS", "YESBANK.NS", "ZEEL.NS", "IDFCFIRSTB.NS", "PFC.NS",
-    "NHPC.NS", "NMDC.NS", "BHEL.NS", "IEX.NS", "ONGC.NS", "GAIL.NS", "SAIL.NS",
-    "IRCTC.NS", "MOTHERSON.NS", "BALRAMCHIN.NS", "RBLBANK.NS", "UCOBANK.NS", "BANKINDIA.NS",
-    "MINDACORP.NS"
+    "YESBANK.NS", "UCOBANK.NS", "BANKINDIA.NS", "RBLBANK.NS", "IDFCFIRSTB.NS",
+    "IRFC.NS", "NHPC.NS", "IEX.NS", "RVNL.NS", "NBCC.NS", "BEL.NS", "BHEL.NS",
+    "NMDC.NS", "SAIL.NS", "GAIL.NS", "TATAPOWER.NS", "MOTHERSON.NS", "MGL.NS",
+    "CANBK.NS", "PNB.NS", "UNIONBANK.NS", "BANKBARODA.NS", "PFC.NS", "COALINDIA.NS",
+    "POWERGRID.NS", "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS",
+    "DIXON.NS", "METROPOLIS.NS", "MINDTREE.NS", "LUPIN.NS", "SUNPHARMA.NS",
+    "APOLLOHOSP.NS", "ZOMATO.NS", "TATAMOTORS.NS", "INDUSTOWER.NS", "AUBANK.NS"
 ]
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -64,7 +69,10 @@ def _build_row(ticker: str, hist: pd.DataFrame) -> Optional[dict]:
     if change_20d > -15:
         score += 1.0
 
-    if score < 6.0:
+    if current > 150:
+        return None
+
+    if score < 5.0:
         return None
 
     signal = "BUY" if change_1d > 0 and current > ma20 else "WATCH"
@@ -135,8 +143,10 @@ def get_daily_recommendations(force_refresh: bool = False) -> tuple[pd.DataFrame
     cached_df, generated_at = load_cached_recommendations()
     if cached_df is not None and not cached_df.empty and generated_at:
         try:
-            cached_time = datetime.fromisoformat(generated_at)
-            if datetime.now() - cached_time < timedelta(hours=24):
+            generated_dt = datetime.fromisoformat(generated_at)
+            if generated_dt.tzinfo is None:
+                generated_dt = generated_dt.replace(tzinfo=timezone.utc)
+            if generated_dt.astimezone(IST).date() == datetime.now(IST).date():
                 return cached_df, generated_at
         except Exception:
             pass
